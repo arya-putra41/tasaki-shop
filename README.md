@@ -4,26 +4,32 @@
 # Tugas 2
 ## 1: Jelaskan bagaimana Anda mengimplementasikan checklist di atas secara step-by-step
 
-- Inisialisasi folder lokal `tasaki-shop` dengan Git
-- Membuka *virtual environment* Python 
-- Menginstal *dependency* (library yang diperlukan untuk menjalankan aplikasi) melalui pip
-- Setelah terinstal, membuka proyek Django baru melalui `django-admin`
-- Mengatur variabel *environment*, seperti nama dan *host* basis data yang digunakan
+### Membuat sebuah proyek Django baru
+Saya pertama menginisiasi folder lokal `tasaki-shop` dengan Git (`git init`). Kemudian, saya membuka *virtual environment* Python (`python -m venv env`, kemudian `env\Scripts\activate`), membuat berkas `requirements.txt` berisi nama-nama *dependency library* (termasuk Django itu sendiri, Gunicorn, dan Whitenoise), lalu menggunakan pip untuk menginstal semua *dependency* tersebut (`pip install requirements.txt`). Untuk membuka proyek Django, saya menggunakan perintah `django-admin startproject tasaki_shop .`.
 
-**Proyek Django sudah dibuat**
+Setelah membuka proyek, kita kemudian perlu mengatur *environment variable* dan mengatur opsi proyek di berkas `tasaki_shop/settings.py` untuk menggunakan variabel tersebut sekaligus mengatur *host* yang boleh menjalankan proyek kita.
 
-- Membuat aplikasi `main` dan mendaftarkannya ke proyek
-- Mengisi *template* `main.html` di folder `main/templates` dengan format NPM, nama, dan kelas
-- Membuat model di `main/models.py` yang mendeskripsikan kelas `Product` dengan atribut-atributnya
-- Membuat *view* di `main/views.py` yang mengisi format pada template dengan data yang tepat (menghubungkan model dengan template)
-- Melakukan *routing* URL di `tasaki_shop/urls.py` yang menghubungkan user dengan view, sehingga situs web dapat diakses
+### Membuat aplikasi bermama `main`
+Untuk membuat aplikasi, kita menggunakan perintah `python manage.py startapp main` di folder `tasaki-shop`. Kemudian, kita mengedit `INSTALLED_APPS` pada `settings.py` untuk memasukkan `main` sebagai aplikasi yang dapat dijalankan oleh proyek `tasaki_shop`. 
 
-**Kita memperoleh aplikasi web yang "berfungsi" dengan elemen lengkap model, view, dan template (MVT)**
+### Membuat model Product
+Model berupa kelas `Product` dimasukkan dalam berkas `main/models.py` dan berisi atribut seperti berikut:
+- `name: CharField`
+- `price: IntegerField`
+- `description: CharField`
+- `thumbnail: URLField`
+- `category: CharField`
+- `is_featured: BooleanField`
+- Saya juga menambahkan atribut `stock: PositiveIntegerField`
 
-- Mengatur berkas .gitignore
-- Membuat README
-- Membuka repositori publik `arya-putra-41/tasaki-shop` di GitHub dan melakukan unggahan pertama
-- Melakukan *deployment* berkas aplikasi ke PWS (Pacil Web Service)
+### Membuat fungsi pada `views.py` dan membuat template
+Di `views.py` saya membuat fungsi `show-main` yang memberikan variabel *context* berupa nama, NPM, dan kelas. Berikutnya saya membuat template `main.html` yang dapat diisi oleh variabel-variabel tersebut.
+
+### Melakukan routing pada proyek
+Hal ini dilakukan dengan berkas `urls.py` di `tasaki_shop` dan `urls.py` di `main`. Di `main`, kita mengonfigurasi path yang akan menjalankan fungsi `show-main` dari *views*, sedangkan di `tasaki_shop`, kita membuat path yang mengarah kepada berkas URL di main (`include('main.urls')`).
+    
+### Melakukan deployment ke PWS
+Kita membuka proyek baru di PWS dengan nama `tasakishop`, mengatur *environment variable*, dan melakukan *deployment* melalui `git push pws master`.
   
 ## 2: Buatlah bagan yang berisi request client ke web aplikasi berbasis Django beserta responnya dan jelaskan pada bagan tersebut kaitan antara `urls.py`, `views.py`, `models.py`, dan berkas `html`
 
@@ -57,7 +63,6 @@ Bagi saya, alasan utama Django dipilih adalah karena berdasarkan bahasa Python. 
 ## 6. Apakah ada feedback untuk kakak asdos dari sesi lab sebelumnya?
 
 Kakak asdos standby di server discord PBP dan sangat cepat dalam menanggapi pertanyaan mahasiswa.
-
 
 ### Referensi:
 Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
