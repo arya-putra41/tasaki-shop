@@ -20,7 +20,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -33,7 +32,7 @@ PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "arya-putra41-tasakishop.pbp.cs.ui.ac.id"]
-
+CSRF_TRUSTED_ORIGINS = ["https://arya-putra41-tasakishop.pbp.cs.ui.ac.id"]
 
 # Application definition
 
@@ -62,7 +61,7 @@ ROOT_URLCONF = 'tasaki_shop.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

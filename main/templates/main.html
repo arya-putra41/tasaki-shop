@@ -1,17 +1,62 @@
-<html>
-<head>
+{% extends 'base.html' %}
+
+<!--block meta: untuk menambahkan informasi metadata di head, seperti title-->
+{% block meta %}
     <title>Tasaki Shop - Misaka's Best Football</title>
-</head>
+{% endblock meta %}
 
-<body>
-    <h1>Tasaki Shop</h1>
-    <h2>Misaka City's Best Football Merchandise</h2>
+<!--block content: untuk menambahkan informasi utama webpage-->
+{% block content %}
+    <div class="title">
+        <h1>Tasaki Shop</h1>
+        <h2>Misaka City's Best Football Merchandise</h2>
+    </div>
 
-    <h4>NPM: </h4>
-    <p>{{ npm }}</p>
-    <h4>Name: </h4>
-    <p>{{ name }}</p>
-    <h4>Class: </h4>
-    <p>{{ class }}</p>
-</body>
-</html>
+    <div class="my_info">
+        <h4>NPM: </h4>
+        <p>{{ npm }}</p>
+        <h4>Name: </h4>
+        <p>{{ name }}</p>
+        <h4>Class: </h4>
+        <p>{{ class }}</p>
+    </div>
+
+    <div class="new_product_btn">
+        <a href="{% url 'main:create_product' %}">
+            <button>== Add New Product ==</button>
+        </a>
+    </div>
+
+    <hr>
+
+    {% if not product_list %}
+        <p>No products are currently registered.</p>
+    {% else %}
+        {% for product in product_list %}
+            <div>
+                <h2><a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a></h2>
+                
+                <!--Show category, stock, and price-->
+                <p><b>{{ product.category }} | Stock available: {{ product.stock }}</b>
+                   {% if product.is_featured %}<b>| FEATURED PRODUCT!</b>{% endif %}
+                </p>
+                <p class="price"><b>Price: ${{ product.price }}</b></p>
+                
+                <!--Show thumbnail, if exists-->
+                {% if product.thumbnail %}
+                    <img src="{{ product.thumbnail }}" alt="thumbnail for {{ product.name }}" width="150" height="100">
+                    <br/>
+                {% endif %}
+
+                <!--Show product description-->
+                <p>{{ product.description|truncatewords:25 }}...</p>
+                <p><a href="{% url 'main:show_product' product.id %}">
+                    <button>More about this product...</button>
+                </a></p>
+            </div>
+
+            <hr>
+        {% endfor %}
+
+    {% endif %}
+{% endblock content %}
