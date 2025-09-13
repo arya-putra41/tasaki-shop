@@ -64,6 +64,81 @@ Bagi saya, alasan utama Django dipilih adalah karena berdasarkan bahasa Python. 
 
 Kakak asdos standby di server discord PBP dan sangat cepat dalam menanggapi pertanyaan mahasiswa.
 
+# Tugas 3
+## 1: Jelaskan bagaimana Anda mengimplementasikan checklist di atas secara step-by-step
+
+### Menambahkan fungsi *views* baru
+Untuk menambahkan fungsionalitas *display* XML, JSON, XML *by* ID dan JSON *by* ID, kita perlu mengedit berkas `main/views.py`. Di berkas tersebut kita menambahkan fungsi-fungsi baru yang mentransformasi data yang ditarik dari *database* (SQLite di lokal, atau basis data PWS saat deployment) menjadi format XML dan JSON. Hal ini dilakukan dengan salah satu *interface* bawaan Django, yaitu `serializers`. Saat menampilkan seluruh data produk, kita menggunakan `serializers` untuk mengolah `product_list`, sedangkan saat menampilkan produk *by* ID, kita mengolah produk yang sesuai ID tersebut saja. Jika produk dengan ID tersebut tidak ada, akan dikembalikan laman *error* 404.
+
+### Membuat *routing* URL
+Tahap ini cukup mudah, karena kita hanya perlu sedikit perubahan yang sistematis pada `main/urls.py`. Kita mengimport keempat *view* baru yang sudah kita buat dari `main.views`, lalu menambahkan URL yang sesuai. Untuk XML dan JSON kita mengaksesnya lewat `xml/` dan  `json/`, dan untuk memfilter sesuai ID kita menambahkan ID produk yang bersangkutan ke belakang URL.
+
+### Membuat halaman utama yang menampilkan data objek model dan akses form
+Saya mengintegrasikan halaman ini ke dalam `main.html`. Sebelumnya saya perlu mengedit model saya untuk menambahkan atribut `id` yang berupa UUID. Setelah itu, saya membuat *for loop* yang melakukan iterasi pada daftar produk untuk menampilkan informasi seperti:
+- nama produk,
+- kategori produk,
+- stok yang tersedia,
+- status *featured*,
+- harga produk,
+- gambar *thumbnail* produk, dan
+- deskripsi produk, dengan tombol untuk menuju halaman detail produk (templat `product_detail.html`).
+
+Selain itu, saya juga membuat tombol berupa *link* ke laman formulir untuk mendaftarkan produk baru (templat `create_product.html`).
+
+### Membuat halaman formulir
+Untuk membuat halaman formulir, kita terlebih dahulu mendefinisikan isi formulir yang perlu dibuat dengan membuat berkas baru `main/forms.py`. Di dalam *file* tersebut, kita menggunakan kelas bawaan `django.forms` yaitu `ModelForm` untuk merancang isi formulir sesuai dengan model `Product` yang sudah kita buat.
+
+Kemudian, kita perlu membuat fungsi baru di `main/views.py` yang berfungsi menampilkan formulir tersebut. Setelah mengimpor formulir yang kita buat di `forms.py`, kita membuat fungsi `create_product` yang menampilkan laman web berisi formulir tersebut sekaligus menyimpan dan memproses isi formulir ketika sudah di-*submit*. 
+
+Tentu saja, agar laman web tersebut dapat ditampilkan, kita harus membuat *template*-nya terlebih dahulu. Di `main/templates`, kita membuat *file* baru `create_product.html` yang menggunakan Django untuk menampilkan formulir yang sudah kita buat secara otomatis dalam bentuk tabel. Di sana kita juga menambahkan `csrf_token` yang berfungsi untuk menjamin keamanan situs web kita dari serangan yang mungkin terjadi lewat formulir.
+
+Terakhir, di `main/urls.py` kita menambahkan *routing* baru yang akan memanggil *view* yang sudah kita buat.
+
+### Membuat halaman detail produk
+Untuk membuat halaman detail produk, kita dapat menggunakan informasi yang sudah ditampilkan pada halaman *main*, seperti nama, kategori, stok, status *featured*, harga, gambar, dan deskripsi. Namun, perbedaannya adalah kita hanya memanggil informasi satu produk saja dan deskripsi produk ditampilkan secara penuh. Kita juga menambahkan satu tombol untuk kembali ke halaman *main*. Semua ini kita masukkan ke dalam *template* baru, yaitu `product_detail.html`
+
+Tahapan lain serupa dengan yang kita lakukan saat menambahkan halaman formulir. Di *view*, kita memanfaatkan fungsi `get_object_or_404` untuk mengambil produk yang sudah dibuat menggunakan ID, dan untuk itu pada *view* dan *routing* URL kita memasukkan parameter berupa ID produk. ID produk ini akan diperoleh ketika kita menekan tombol detail produk di halaman utama, karena melalui antarmuka Django kita dapat melakukan *passing* ID produk yang sedang ditampilkan ke fungsi detail produk di *view*.
+
+## 2. Mengapa kita memerlukan *data delivery* dalam mengimplementasikan platform?
+Sederhananya *data delivery* adalah proses memindahkan data dari satu tempat atau sistem ke tempat lain. Cukup jelas bahwa perpindahan data pasti dibutuhkan dalam membuat sebuah *platform*. Misalnya, untuk sebuah *platform e-commerce*, perpindahan data diperlukan dalam:
+- Mendaftarkan produk yang dijual pengguna ke server
+- Menyampaikan data pembayaran pengguna ke server untuk kemudian diproses (melalui bank atau penyedia jasa lainnya)
+- Memberikan notifikasi kepada user tentang status pembelian dan pengiriman
+- Memberikan data pesanan kepada penjual ketika produk dibeli
+- Mengimplementasikan kupon dan diskon
+- Menciptakan algoritma rekomendasi produk yang mungkin disukai pengguna berdasarkan data pembelian sebelumnya, dan masih banyak lagi.
+
+Terkadang, kita membutuhkan format data yang terstandardisasi untuk mempermudah penyortiran dan pengolahan data. Django mendukung kebutuhan ini dengan menyediakan antarmuka `serializers` yang dapat mengubah model Django menjadi format XML, JSON, dan lainnya.
+
+## 3. Mana yang lebih baik antara JSON dan XML?
+Banyak sumber menulis bahwa JSON lebih populer daripada XML, dan saya pribadi setuju dengan hal ini. Ada beberapa alasan mengapa saya lebih senang menggunakan format JSON daripada format XML:
+- JSON lebih mudah dibaca. XML dibangun dari tata bahasa HTML, tetapi dengan setiap *tag* mewakili objek atau atribut objek seperti `<person>`, `<name>`, dan `<age>` alih-alih bagian laman web seperti `<p>`, `<span>`, atau `<table>`. Sayangnya format ini juga membawa kelemahan, yaitu perlunya tag di awal dan akhir setiap data. Tag-tag ini bisa cukup merepotkan dan membuat data XML menjadi sulit dibaca ketika banyaknya data menyebabkan tag dan atribut masing-masing tag berbaur menjadi satu. Sebaliknya, JSON didesain menyerupai sintaks OOP pada JavaScript meskipun sebenarnya berupa format teks (tidak spesifik pada JS), yaitu berupa *key-value pair*. Delineasi masing-masing data dengan tanda kutip, titik dua, dan tanda kurung menyebabkan batasan antarobjek lebih mudah dilihat dan format dokumen menjadi lebih rapi. 
+- JSON lebih padat dan hemat memori. Kebutuhan tag pada XML artinya banyak memori yang perlu dikorbankan untuk menyimpan metadata, seperti nama *field* dan tipe isi *field* tersebut (apakah angka, teks, boolean atau lainnya). Karena JSON memisahkan antardata dengan lebih intuitif dan dengan jumlah karakter yang lebih sedikit, kebutuhan memori yang diperlukan untuk menyimpan data JSON lebih kecil.
+- JSON lebih mudah diolah. Data XML harus diproses dengan menggunakan program khusus (XML *parser*) dan memerlukan iterasi melalui XML DOM untuk mengambil dan menyimpan nilai-nilai variabel yang ada. Di sisi lain, JSON dapat diolah oleh fungsi JavaScript biasa yang dapat langsung menghasilkan sebuah objek yang dapat digunakan.
+
+## 4. Jelaskan fungsi dari method `is_valid()`
+Mengutip dokumentasi Django (Django Software Foundation, 2025), setiap objek `Form` termasuk `ModelForm` memiliki method `is_valid()`. Method ini akan mengecek apakah formulir tersebut siap dikirim atau tidak dengan memeriksa seluruh data pada formulir. Jika semua data valid, data tersebut akan dimasukkan ke dalam atribut `cleaned_data` milik `Form` tersebut, yang berupa *dictionary*. Selain itu, jika data sudah divalidasi, maka data dapat disimpan ke *database* melalui method `save()`.
+
+Metode ini diperlukan untuk memastikan bahwa formulir sudah siap untuk dikirim, yaitu semua data yang perlu diisi sudah diisi dan dengan tipe data yang tepat. Sebagai contoh, method `is_valid()` akan mencegah kita mendaftarkan produk baru yang tidak punya nama. Secara otomatis, semua atribut objek yang dikaitkan ke `ModelForm` bersifat wajib diisi, tetapi kita bisa mengaturnya agar tidak wajib diisi dengan `blank=True` dan/atau `null=True`.
+
+## 5. Apa fungsi dari `CSRF_token`?
+CSRF token merupakan langkah pertahanan Django terhadap salah satu tipe serangan siber, yaitu *Cross Site Request Forgery* (CSRF). Dalam serangan CSRF, pihak yang tidak bertanggung jawab menggunakan identitas akun pengguna untuk mengirimkan *request* kepada situs lain yang tidak sesuai keinginan pengguna. Karena pengguna sudah login dan terotentikasi, situs tidak bisa membedakan *request* yang dikirim oleh user dengan yang dikirimkan oleh pihak lain yang "mengaku-ngaku" sebagai si user. Serangan CSRF dapat digunakan untuk memanfaatkan akun pengguna dan wewenang-wewenang yang mungkin dimilikinya, misalnya mengirimkan dana dari rekening bank pengguna yang sedang login di situs *online banking*. Salah satu target yang sering dicari dalam serangan CSRF adalah formulir-formulir yang dapat mengubah *database* aplikasi.
+
+Untuk melindungi *form* aplikasi web kita dari serangan CSRF, Django memasukkan sebuah entri pada formulir yang tidak dapat dilihat user, yaitu `csrfmiddlewaretoken`. Untuk mengisi entri ini, user perlu memiliki *cookies* CSRF yang hanya dapat diperoleh dari aplikasi web kita saat login (tidak dari situs lain). Pada formulir kita mendapatkannya dengan `{% csrf_token %}` di `create_product.html`. Apabila kita tidak memiliki token yang tepat saat mengirim formulir, akan terjadi error 403 *Forbidden*.
+
+## 6. Apakah ada feedback untuk asdos di tutorial 2?
+Asdos menulis dokumen tutorial 2 dengan sangat jelas dan lugas. Saya juga suka adanya Penjelasan Kode untuk poin yang mungkin baru bagi mahasiswa, meskipun menurut saya penjelasan tersebut bisa lebih diperluas lagi.
+
+## Postman
+![Gambar output Postman untuk laman XML](image.png)
+![Gambar output Postman untuk laman XML by ID](image-1.png)
+![Gambar output Postman untuk laman JSON](image-2.png)
+![Gambar output Postman untuk laman JSON by ID](image-3.png)
+
 ### Referensi:
 Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
+
+"JSON vs XML". W3Schools. Diakses dari https://www.w3schools.com/js/js_json_xml.asp
+
+KirstenS. *Cross Site Request Forgery (CSRF)*. Open Worldwide Application Security Project. Diakses dari https://owasp.org/www-community/attacks/csrf
 
