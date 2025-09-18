@@ -135,10 +135,71 @@ Asdos menulis dokumen tutorial 2 dengan sangat jelas dan lugas. Saya juga suka a
 ![Gambar output Postman untuk laman JSON](image-2.png)
 ![Gambar output Postman untuk laman JSON by ID](image-3.png)
 
-### Referensi:
+## Referensi Tugas 3:
 Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
 
 "JSON vs XML". W3Schools. Diakses dari https://www.w3schools.com/js/js_json_xml.asp
 
 KirstenS. *Cross Site Request Forgery (CSRF)*. Open Worldwide Application Security Project. Diakses dari https://owasp.org/www-community/attacks/csrf
 
+# Tugas 4
+## 1. Jelaskan bagaimana anda mengimplementasikan checklist di atas secara step-by-step
+
+### Mengimplementasikan fungsi registrasi, login, dan logou
+Untuk membuat **registrasi**, kita harus terlebih dahulu membuat *view* pada `main/views.py` yang akan membantu kita menampilkan, menyimpan, dan mengolah *form* registrasi, sama seperti yang kita lakukan dengan *form* pembuatan produk sebelumnya. Formulir bawaan Django (pada *library* `django.contrib.auth.forms`) yang akan membantu kita membuat formulir registrasi adalah `UserCreationForm`. Dengan ini, kita bahkan tidak perlu merancang form pada `main/forms.py` seperti pada pembuatan produk; Django sudah otomatis membuatkan formulir pendaftaran untuk kita.
+
+Namun, kita pastinya perlu tampilan yang dapat dilihat user untuk menyajikan formulir registrasi kita. Kita membuat template baru di `main/templates` yaitu `register.html`. Di sini kita menggunakan cara `form.as_table` yang sama dengan formulir pembuatan produk, tetapi kita juga menambahkan *space* untuk pesan (*messages*) yang mungkin dikirimkan oleh sistem, misalnya memberi tahu user apakah registrasinya berhasil atau gagal. 
+
+Membuat **login** melibatkan langkah yang tak jauh berbeda dengan registrasi. Kali ini formulir yang digunakan di fungsi login di `views.py` adalah `AuthenticationForm` dari *library* yang sama. Selain itu, kita juga memerlukan fungsi `login` dari `django.contrib.auth`. Fungsi ini akan menyimpan sebuah kuki (HTTP *cookie*), yang akan dibicarakan lebih lanjut ke depannya. Di `main/templates`, kita membuat laman `login.html` yang meminta *username* dan *password* kita kembali. Perbedaan implementasinya dengan registrasi adalah bahwa sekarang, kita memiliki *link* ke halaman registrasi untuk pengguna yang belum memiliki akun.
+
+Fungsi **logout** lebih sederhana, karena tidak perlu menampilkan halaman web. Kita cukup mengakhiri *session* pengguna. Oleh karena itu, fungsi *logout* pada `views.py`dapat kita implementasikan dengan mengambil fungsi `logout` dari `django.contrib.auth`.
+
+Tidak lupa kita mengaitkan fungsi registrasi, login, dan logout ke `main/urls.py`.
+
+Setelah itu, kita akan membatasi halaman-halaman antarmuka aplikasi (seperti daftar produk, detail produk, dan pembuatan produk) agar hanya dapat diakses oleh user yang telah login. Hal ini kita lakukan dengan mengimpor *decorator* berupa `@login_required` dari `django.contrib.auth.decorators`, lalu menambahkannya ke *view* untuk masing-masing laman tersebut. Kita juga menetapkan atribut `login_url` agar Django tahu ke mana user sebaiknya dipindahkan jika mereka belum login.
+
+### Menghubungkan model `Product` dengan `User`
+Kita perlu mengedit model `Product` kita di `main/models.py` untuk menambahkan model `User` sebagai *foreign key*. Untuk itu kita menambahkan atribut `user` pada model kita, yang menandai siapa yang mendaftarkan produk yang bersangkutan. Model `User` diimpor dari *library* bawaan Django di `django.contrib.auth.models`. 
+
+*Foreign key* merupakan konsep dalam basis data yang artinya satu tabel (dalam hal ini, model Django) dapat memiliki atribut atau parameter yang sebenarnya berupa elemen pada tabel lainnya. Hubungan yang kita implementasikan ini menandai "pemilik" dari suatu produk sebagai *one-to-many relationship*, artinya satu pengguna dapat memiliki banyak produk. Dalam implementasinya pada *database*, ini artinya beberapa objek dalam model `Product` dapat memiliki atribut `user` yang sama, yang merujuk kepada objek yang sama di model `User`.
+
+Di `main/views.py`, kita mengedit fungsi pembuatan produk kita agar dapat mengaitkan user ke produk. Saat mengirim formulir, kiriman tersebut akan "ditahan" dengan atribut `commit=False`. Kemudian, kita mendefinisikan atribut `user` dari produk sebagai user yang sekarang sedang login. Baru setelah itu, kita menyimpan formulir dan mengirimkannya untuk diproses di *database*.
+
+### Menerapkan *cookie* dan menampilkan informasi pengguna
+Mengimplementasikan *cookie* berarti kita perlu terlebih dahulu mendefinisikan di mana kuki (*cookie*) akan dibuat dan dihapus. Kita lakukan ini dengan mengedit fungsi login dan logout pada `main/views.py` kita. Di sini kita akan menyimpan kuki berupa `last_login`, yang berfungsi menyimpan status login kita sekaligus waktu kita melakukan login. Dengan pemahaman bahwa kuki akan dibuat (di-*update* dengan waktu terbaru) saat login dan dihapus saat logout, kita mengedit fungsi login dan logout kita di `main/views.py`. Khususnya, kita mengubah `HttpResponse` yang sebelumnya langsung dikembalikan menjadi sebuah objek, yang kemudian dapat kita operasikan dengan fungsi `set_cookie` dan `delete_cookie`.
+
+Berikutnya, kita akan mengedit halaman utama dan detail produk untuk menampilkan informasi baru yang kita peroleh. Karena HTTP *request* sekarang memiliki informasi user yang login, kita dapat menambahkannya ke konteks yang ditampilkan pada fungsi `show_main` di `main/views.py`. Kita juga dapat menambahkan kuki yang kita buat saat login. Oleh karena itu, kita dapat mengakses kedua informasi tersebut di halaman main melalui variabel Django. Hal yang sama pun berlaku untuk produk: jika ada user yang terkait pada produk, maka kita dapat menarik data itu dari atribut produk dan menampilkannya sebagai nama penjual.
+
+Satu lagi fitur yang ingin kita implementasikan pada aplikasi kita adalah *filtering* produk berdasarkan user. Kita lakukan ini dengan memodifikasi list produk yang ditampilkan pada halaman main. Untuk mengambil parameter yang diinginkan, kita membaca URL pada HTTP *request* yang dikirimkan, lalu menerapkannya dengan fungsi `filter` pada daftar objek `Product`. Tentu saja, user perlu bisa mengaktifkan fitur ini, sehingga kita membuat beberapa *link* pada halaman main yang akan memodifikasi URL dengan parameter yang diinginkan.
+
+### Membuat 2 akun pengguna dan 3 dummy data per pengguna
+Karena tahap ini lebih dekat dengan *functional testing*, kita dapat melakukannya tanpa mengedit kode kita lebih lanjut. Saya mendaftarkan 2 akun pengguna yang berbeda, kemudian membuat 3 produk atas nama masing-masing user tersebut.
+
+## 2. Apa itu Django `AuthenticationForm`?
+Mengutip dokumentasi Django (Django Software Foundation, 2025), `AuthenticationForm` merupakan formulir bawaan Django yang dapat diimpor dari modul `django.contrib.auth.forms`. Formulir ini digunakan untuk mengumpulkan dan mengolah data identitas user yang diperlukan untuk login, seperti username, password, dan *field-field* lainnya seperti email. Secara *default*, `AuthenticationForm` akan menolak login user yang tidak aktif (`is_active` == False). Namun, hal ini dapat dihindari dengan menggunakan subclass yang meng-*override* fungsi `confirm_login_allowed()` melalui *inheritance*.
+
+Keuntungan menggunakan `AuthenticationForm` adalah mudah diterapkan dan dipakai. Kita tidak perlu membuat formulir kita sendiri untuk menangkap data-data yang diperlukan. Namun, `AuthenticationForm`, seperti *form-form* autentikasi lainnya di Django, hanya 100% kompatibel dengan model `User` bawaan Django. Jika kita memiliki kelas user sendiri, kita mungkin harus merubah form atau bahkan membuat form sendiri yang dapat mengakses kelas user kita.
+
+## 3. Apa perbedaan autentikasi dan otorisasi?
+Perbedaan utama antara autentikasi (*authentication*) dan otorisasi (*authorization*) adalah autentikasi memastikan keaslian identitas seorang user, sedangkan otorisasi memastikan izin-izin yang dimiliki user tersebut (Kosinski). Dalam proses autentikasi, kita menggunakan informasi yang dimiliki user, seperti username, password, email, nomor telepon, hingga biometrik seperti sidik jari atau retina mata, untuk memastikan bahwa identitas user yang sedang login sesuai dengan user yang ada dalam *database*. Beberapa cara autentikasi di atas dapat digabungkan menjadi *multi-factor authentication* (MFA). 
+
+Adapun proses otorisasi memeriksa apakah user diizinkan melakukan aktivitas tertentu di sistem berdasarkan statusnya, misalnya membuka file, mengedit file, atau menjalankan program. Beberapa sistem membatasi otorisasi selain dari *role* pengguna, apakah user atau admin; sebagai contoh, perusahaan hanya mengizinkan akses untuk data penting di jam kerja untuk menghindari akun admin digunakan oleh orang yang tidak bertanggung jawab.
+
+Django menyediakan *tools* yang beragam untuk menangani autentikasi pengguna, yang terkandung di dalam modul `django.contrib.auth`. Berpusat pada model `User`, Django menyediakan formulir `AuthenticationForm` dengan username dan password, kendali login dan logout, penyimpanan sesi user melalui *cookie*, dan pengelompokan user menjadi grup dengan perizinan yang berbeda. Otorisasi masing-masing grup dan user dapat dimodifikasi, memberikan mereka izin melihat, menambahkan, menghapus, dan mengedit file. Satu cara yang paling sederhana adalah dengan *decorator* `@login_required` pada *view* yang melarang user yang belum login mengakses halaman tertentu.
+
+## 4. Apa kelebihan dan kekurangan menggunakan *session* dan menggunakan *cookies*?
+*Cookie* dan *session* merupakan dua cara aplikasi web dapat mewujudkan *holding state*, atau membawa informasi dari satu laman web ke laman yang lain. 
+
+*Cookie* disimpan pada browser pengguna dan akan dikirimkan kembali ke server setiap kali kita melakukan HTTP *request*. Cookie hanya cocok untuk menyimpan data yang berukuran kecil, karena batas ukuran cookie hanya 4 KB. Data dalam cookie juga dapat mudah diakses oleh pengguna (hanya melalui *inspect element*) sehingga keamanannya tidak terjamin. Namun, kedaluarsanya sebuah cookie dapat diatur bebas oleh programmer, sehingga kita dapat mengatur berapa lama data akan disimpan. Kompatibilitas cookie juga luas, karena implementasi cookie sudah dilakukan pada browser sejak pertengahan tahun 1990-an.
+
+*Session* disimpan pada server dan menyimpan informasi pengguna yang sedang login. Kelebihan menggunakan sistem session adalah kemampuan menyimpan data dalam jumlah lebih besar daripada cookie dan lebih aman karena disimpan secara *server-side*. Akan tetapi, session akan kedaluarsa saat proses aplikasi yang sedang berjalan ditutup, atau kedaluarsa secara otomatis saat user tidak aktif (hal inilah yang menyebabkan error *session expired*). Menarik data dari session juga lebih lambat daripada cookie karena browser perlu mengirimkan request ke server untuk mengambil data tersebut.
+
+## 5. Apakah menggunakan *cookie* berisiko? Bagaimana Django menangani hal tersebut?
+Seperti yang telah dijelaskan pada poin sebelumnya, data pada *cookie* tidak sepenuhnya aman karena tersimpan di browser, sehingga mudah diakses oleh user. Pencurian cookie juga dapat terjadi jika pelaku serangan siber menyadap komunikasi antara server dan browser, atau melalui serangan *cross-site* seperti XSS dan CSRF. 
+
+Untuk menjamin keamanan *cookie*, Django menawarkan opsi `SESSION_COOKIE_SECURE` dan `CSRF_COOKIE_SECURE` yang dapat diakses dari `settings.py` untuk app Django. Opsi ini masing-masing mengatur cookie penyimpanan sesi user dan cookie CSRF. Jika kita mengaktifkan kedua pilihan ini, Django akan memastikan bahwa kedua cookie tersebut hanya dapat dikirimkan melalui koneksi HTTPS yang terenkripsi, alih-alih koneksi HTTP. Adanya kewajiban HTTPS ini dapat melindungi cookie dari penyadapan dan serangan *man-in-the-middle*. Namun, meskipun sudah ada bantuan keamanan dari Django, kita harus tetap sadar terhadap keamanan data cookie saat merancang aplikasi web kita.
+
+## Referensi Tugas 4:
+"Difference Between Session and Cookies". GeeksForGeeks. Diakses dari https://www.geeksforgeeks.org/javascript/difference-between-session-and-cookies/
+Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
+Kosinski, Matthew. *Authentication vs. authorization: What's the difference?*. IBM Think. Diakses dari https://www.ibm.com/think/topics/authentication-vs-authorization
