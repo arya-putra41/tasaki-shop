@@ -10,6 +10,13 @@
 </p>
 <p class="price"><b>Price: ${{ product.price }}</b></p>
 
+<!--Show seller name-->
+{% if product.user %}
+    <p><i>Sold by: {{ product.user.username }}</i></p>
+{% else %}
+    <p><i>Sold by: Anonymous</i></p>
+{% endif %}
+
 <!--Show thumbnail, if exists-->
 {% if product.thumbnail %}
     <img src="{{ product.thumbnail }}" alt="thumbnail for {{ product.name }}" width="300">

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Log In - Tasaki Shop</title>
+{% endblock meta %}
+
+{% block content %}
+<div class="login">
+  <h1>Log In</h1>
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+      <tr>
+        <td></td>
+        <td><input class="btn login_btn" type="submit" value="Log In" /></td>
+      </tr>
+    </table>
+  </form>
+
+  {% if messages %}
+  <ul>
+    {% for message in messages %}
+    <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %} Don't have an account?
+  <a href="{% url 'main:register' %}">Register here</a>
+</div>
+
+{% endblock content %}
