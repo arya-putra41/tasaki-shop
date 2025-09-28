@@ -1,78 +1,68 @@
 {% extends 'base.html' %}
+{% load static %}
 
 <!--block meta: untuk menambahkan informasi metadata di head, seperti title-->
 {% block meta %}
-    <title>Tasaki Shop - Misaka's Best Football</title>
+<title>Tasaki Shop - Misaka's Best Football</title>
 {% endblock meta %}
 
 <!--block content: untuk menambahkan informasi utama webpage-->
 {% block content %}
-    <div class="title">
-        <h1>Tasaki Shop</h1>
-        <h2>Misaka City's Best Football Merchandise</h2>
-    </div>
+{% include 'navbar.html' %}
+<div class="bg-gradient-to-br from-blue-50 via-indigo-100 to-blue-200 w-full pt-16 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <div class="my_info">
-        <h4>Name: </h4>
-        <p>{{ name }}</p>
-        <h4>You last logged in on: </h4>
-        <p>{{ last_login }}</p>
-    </div>
+        <!--Site Title-->
+        <div class="mb-8 ">
+            <h1 class="text-5xl font-mono font-bold text-gray-900 mb-2"><span class="underline">Tasaki Shop</span> <span
+                    class="text-lg font-medium text-gray-600">Misaka City's Best Football Merchandise</span></h1>
+        </div>
 
-    <div class="btns">
-        <a href="{% url 'main:create_product' %}">
-            <button>== Add New Product ==</button>
-        </a>
-        <br>
-        <a href="{% url 'main:logout' %}">
-            <button>== Log Out ==</button>
-        </a>
-        <br>
-        <a href="?filter=all">
-            <button type="button">== Show All Products ==</button>
-        </a>
-        <a href="?filter=my">
-            <button type="button">== Show Products Sold By: {{ name }} ==</button>
-        </a> 
-    </div>
-
-    <hr>
-
-    {% if not product_list %}
-        <p>No products are currently registered.</p>
-    {% else %}
-        {% for product in product_list %}
-            <div>
-                <h2><a href="{% url 'main:show_product' product.id %}">{{ product.name }}</a></h2>
-                
-                <!--Show category, stock, and price-->
-                <p><b>{{ product.category }} | Stock available: {{ product.stock }}</b>
-                   {% if product.is_featured %}<b>| FEATURED PRODUCT!</b>{% endif %}
-                </p>
-                <p class="price"><b>Price: ${{ product.price }}</b></p>
-
-                <!--Show seller name-->
-                {% if product.user %}
-                    <p><i>Sold by: {{ product.user.username }}</i></p>
-                {% else %}
-                    <p><i>Sold by: Anonymous</i></p>
-                {% endif %}
-                
-                <!--Show thumbnail, if exists-->
-                {% if product.thumbnail %}
-                    <img src="{{ product.thumbnail }}" alt="thumbnail for {{ product.name }}" width="150" height="100">
-                    <br/>
-                {% endif %}
-
-                <!--Show product description-->
-                <p>{{ product.description|truncatewords:25 }}</p>
-                <p><a href="{% url 'main:show_product' product.id %}">
-                    <button>More about this product...</button>
-                </a></p>
+        <!--Filters-->
+        <p class="text-gray-400 font-semibold">Filter Your Experience</p>
+        <div
+            class="flex flex-col sm:items-center sm:justify-between mb-8 bg-white rounded-lg border border-gray-200 p-4">
+            <div class="flex flex-col md:flex-row space-x-3 mb-4 sm:mb-0">
+                <a href="?"
+                    class="{% if request.GET.filter == 'all' or not request.GET.filter %} bg-blue-700 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-900 hover:text-white">
+                    All Products
+                </a>
+                <a href="?filter=featured"
+                    class="{% if request.GET.filter == 'featured' %} bg-blue-700 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-900 hover:text-white">
+                    Featured Products
+                </a>
+                <a href="?filter=my"
+                    class="{% if request.GET.filter == 'my' %} bg-blue-700 text-white{% else %}bg-white text-gray-700 border border-gray-300{% endif %} px-4 py-2 rounded-md font-medium transition-colors hover:bg-blue-900 hover:text-white">
+                    {{ name }}'s Products
+                </a>
             </div>
+        </div>
 
-            <hr>
-        {% endfor %}
+        <div class="flex flex-row justify-center items-center">
+            <h2 class="text-3xl font-semibold mb-2 underline">Available Products</h2>
+        </div>
 
-    {% endif %}
+        {% if not product_list %}
+        <div class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <div class="w-32 h-32 mx-auto mb-4">
+                <img src="{% static 'image/not_available.png' %}" alt="No products available"
+                    class="w-full h-full object-contain">
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+            <p class="text-gray-500 mb-6">Register your first product and start selling now.</p>
+            <a href="{% url 'main:create_product' %}"
+                class="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-900 transition-colors">
+                Create Product
+            </a>
+        </div>
+        {% else %}
+        <div class="grid grid-cols-1 gap-6">
+            {% for product in product_list %}
+            {% include 'product_card.html' with product=product %}
+            {% endfor %}
+        </div>
+
+        {% endif %}
+    </div>
+</div>
 {% endblock content %}

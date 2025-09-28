@@ -17,8 +17,10 @@ def show_main(request):
 
     if filter_type == "all":
         product_list = Product.objects.all()
-    else:
+    elif filter_type == "my":
         product_list = Product.objects.filter(user=request.user)
+    elif filter_type == "featured":
+        product_list = Product.objects.filter(is_featured=True)
 
     context = {
         'npm' : '2406406300',
@@ -54,6 +56,27 @@ def show_product(request, id):
     }
 
     return render(request, "product_detail.html", context)
+
+# Show product edit page
+def edit_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    form = ProductForm(request.POST or None, instance=product)
+    if form.is_valid() and request.method == 'POST':
+        form.save()
+        return redirect('main:show_main')
+    
+    context = {
+        'form': form,
+        'thumbnail': product.thumbnail
+    }
+
+    return render(request, "edit_product.html", context)
+
+# Delete a product (no page)
+def delete_product(request, id):
+    product = get_object_or_404(Product, pk=id)
+    product.delete()
+    return HttpResponseRedirect(reverse('main:show_main'))
 
 # Show user registration page
 def register(request):
