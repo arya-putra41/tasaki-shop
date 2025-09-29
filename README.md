@@ -145,7 +145,7 @@ KirstenS. *Cross Site Request Forgery (CSRF)*. Open Worldwide Application Securi
 # Tugas 4
 ## 1. Jelaskan bagaimana anda mengimplementasikan checklist di atas secara step-by-step
 
-### Mengimplementasikan fungsi registrasi, login, dan logou
+### Mengimplementasikan fungsi registrasi, login, dan logout
 Untuk membuat **registrasi**, kita harus terlebih dahulu membuat *view* pada `main/views.py` yang akan membantu kita menampilkan, menyimpan, dan mengolah *form* registrasi, sama seperti yang kita lakukan dengan *form* pembuatan produk sebelumnya. Formulir bawaan Django (pada *library* `django.contrib.auth.forms`) yang akan membantu kita membuat formulir registrasi adalah `UserCreationForm`. Dengan ini, kita bahkan tidak perlu merancang form pada `main/forms.py` seperti pada pembuatan produk; Django sudah otomatis membuatkan formulir pendaftaran untuk kita.
 
 Namun, kita pastinya perlu tampilan yang dapat dilihat user untuk menyajikan formulir registrasi kita. Kita membuat template baru di `main/templates` yaitu `register.html`. Di sini kita menggunakan cara `form.as_table` yang sama dengan formulir pembuatan produk, tetapi kita juga menambahkan *space* untuk pesan (*messages*) yang mungkin dikirimkan oleh sistem, misalnya memberi tahu user apakah registrasinya berhasil atau gagal. 
@@ -201,5 +201,113 @@ Untuk menjamin keamanan *cookie*, Django menawarkan opsi `SESSION_COOKIE_SECURE`
 
 ## Referensi Tugas 4:
 "Difference Between Session and Cookies". GeeksForGeeks. Diakses dari https://www.geeksforgeeks.org/javascript/difference-between-session-and-cookies/
+
 Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
+
 Kosinski, Matthew. *Authentication vs. authorization: What's the difference?*. IBM Think. Diakses dari https://www.ibm.com/think/topics/authentication-vs-authorization
+
+# Tugas 5
+## 1. Jelaskan bagaimana Anda mengimplementasikan checklist di atas
+
+### Implementasi fungsi edit dan delete produk
+Untuk membuat kedua fungsi ini, kita perlu terlebih dahulu mendefinisikan logika fungsi yang kita inginkan di ``main/views.py``. 
+- Pada fungsi **edit**, kita ingin memanggil kembali ``ProductForm`` yang kita gunakan untuk membuat produk baru, tetapi ditujukan terhadap data produk yang sudah ada alih-alih membuat data baru. 
+- Pada fungsi **delete**, kita ingin mencari produk dengan ID tertentu kemudian menghapusnya dari basis data aplikasi kita.
+
+Kedua fungsi ini dapat kita implementasikan dengan mudah berkat *method* bawaan pengeditan data dari Django.
+- Di mana pada fungsi membuat produk, kita memanggil ``ProductForm`` dengan data kosong untuk membuat produk baru, pada fungsi mengedit kita melewatkan argumen dalam atribut ``instance`` berupa suatu produk yang sudah ada kepada ``ProductForm``, sehingga Django dapat mengerti bahwa kita mengacu kepada produk tertentu. Saat kita men-*submit* form tersebut, hasilnya akan mengubah produk yang ada di *instance*.
+- Untuk fungsi menghapus, kita cukup menggunakan method ``get_object_or_404`` yang sering kita gunakan, lalu memanggil method ``delete()`` pada produk yang kita temukan. Method ini akan menghapus data produk tersebut dari *database*. Pada kasus lain, method ini juga akan menghapus data "anak" yang dimiliki oleh objek (misalnya, menghapus user akan sekaligus menghapus semua produk yang dijual olehnya) jika kita inginkan, yang disebut dengan *cascading delete*.
+
+Berikutnya, kita perlu menambahkan *template* HTML baru untuk melayani fungsi edit (fungsi delete tidak perlu halaman). Pembuatan halaman edit ini tak jauh berbeda dengan halaman pembuatan produk yang sudah kita buat, karena mengandung input data yang sama: nama, stok, harga, deskripsi, thumbnail, dan lain-lain.
+
+Tidak lupa juga kita mengintegrasikan kedua fungsi ini ke dalam ``main/urls.py``. Untuk memilih produk mana yang ingin diedit atau dihapus, kita melewatkan argumen ke URL berupa ID produk yang dimaksud.
+
+### Menambahkan *styling* dengan CSS dan *framework*
+Saya memilih menggunakan *framework* Tailwind untuk desain aplikasi saya. Hal-hal yang perlu kita lakukan untuk mengimplementasikan CSS berikut Tailwind ke dalam aplikasi kita adalah:
+- Membuat folder ``static`` di folder *root* kita. Django akan dapat mengambil berkas static yang digunakan aplikasi kita, seperti *stylesheet* CSS, *script* JavaScript, dan gambar, dari folder ini.
+- Mengatur ``tasaki_shop/settings.py`` untuk mendaftarkan folder static yang telah kita buat. Ini dilakukan dengan mengatur ``STATIC_URL``, ``STATICFILES_DIRS`` dan ``STATIC_ROOT`` untuk menunjuk kepada folder tersebut.
+- Menginstal *middleware* WhiteNoise dan mendaftarkannya di ``INSTALLED_APPS`` di ``tasaki_shop/settings.py``. *Middleware* ini diperlukan untuk "menjembatani" Django dan berkas static kita, karena Django standar tidak dapat mengakses file static di luar konteks *debugging*.
+- Membuat *stylesheet* CSS global yang kita letakkan di ``static/css``. Dokumen format CSS ini berisi dua aspek, yaitu selector yang "memilih" elemen HTML apa yang ingin dimodifikasi (berdasarkan tipe elemen, ID, kelas, bahkan hubungan kekeluargaan) dan property yang menjelaskan tampilan apa yang diinginkan dari elemen-elemen tersebut (misalnya warna teks, warna background, tipe font yang digunakan, ukuran teks, hingga animasi ketika elemen di-*hover* atau diklik).
+- Menghubungkan *template* HTML kita dengan stylesheet dengan menggunakan elemen ``<link>``. Hal ini kita lakukan di berkas ``base.html`` yang ada di folder ``templates`` milik root (bukan milik ``main``). Hal ini agar *template* kita yang memperluas (*extend*) berkas base tersebut dapat menggunakan stylesheet kita juga.
+- Menambahkan penghubung dengan folder ``static``, yaitu ``{% load static %}`` di setiap *template* yang membutuhkannya. Kita memerlukannya di ``base.html`` tadi agar dapat memuat stylesheet kita. *Template* lainnya yang memuat file static, seperti gambar, juga perlu ``{% load static %}`` (meskipun sudah diberikan di base!)
+- Menghubungkan aplikasi kita dengan CDN *framework* Tailwind. Di ``base.html`` kita menambahkan tag ``<script>`` yang mengacu kepada script eksternal, di ``https://cdn.tailwindcss.com``. Script ini akan memungkinkan browser memuat kelas-kelas milik Tailwind, yang masing-masing menerapkan property CSS tertentu. Dengan ini, kelas-kelas yang kita berikan akan diterjemahkan menjadi bahasa CSS, yang digunakan oleh browser untuk merancang tampilan halaman.
+- Menentukan tampilan yang kita inginkan untuk halaman web kita. Untuk tahap ini, saya banyak menggunakan tutorial sebagai inspirasi, tetapi saya melakukan sejumlah perubahan untuk menyesuaikan tampilan dan fungsionalitas aplikasi dengan keinginan saya.
+
+Hasil *styling* aplikasi saya dengan Tailwind adalah seperti berikut:
+#### Halaman utama (beserta navbar)
+![alt text](image-4.png)
+
+#### Bentuk navbar di tampilan mobile
+![alt text](image-10.png)
+
+#### Detil produk
+![alt text](image-5.png)
+
+#### Membuat produk
+![alt text](image-6.png)
+
+#### Mengedit produk
+![alt text](image-9.png)
+
+#### Login
+![alt text](image-7.png)
+
+#### Registrasi
+![alt text](image-8.png)
+
+## 2. Tentukan prioritas *selector* CSS jika menunjuk kepada elemen HTML yang sama
+Prioritas selector CSS ditentukan oleh sistem *specificity* (spesifikasi), yaitu sempitnya jangkauan pemilihan selector tersebut. Jika terjadi tabrakan (dua selector mengatur property yang sama), property yang akan digunakan oleh elemen adalah yang dijelaskan oleh selector yang paling spesifik.
+
+Urutan spesifikasi selector CSS, dari prioritas tertinggi ke terendah, adalah:
+- *Inline style* (e.g. ``<p style='color:red;'>``) 
+- Selector ID (e.g. ``#myId``)
+- Selector kelas (e.g. ``.myKelas``)
+- Selector elemen (e.g. ``p``, ``h1``, ``img``)
+- Selector umum (e.g. ``*``)
+
+Dalam urutan *cascade* yang sama, kita dapat "memaksakan" suatu property yang seharusnya kalah secara spesifikasi dengan menggunakan ``!important``. Property yang ditandai ``!important`` akan mengalahkan property dari selector yang lebih spesifik.
+
+Selain specificity, salah satu faktor lain yang memengaruhi pemilihan property CSS untuk suatu elemen adalah sumber *stylesheet* yang digunakan (*origin*). Ada tiga sumber stylesheet yang mungkin, yaitu dari prioritas tertinggi ke terendah:
+- User: Opsi *styling* khusus yang dikustomisasi oleh user, misalnya menentukan font default.
+- Author: Stylesheet yang dibuat oleh web developer dan melekat pada website. Umumnya ini merupakan sumber utama CSS untuk website.
+- User agent: Data CSS bawaan browser yang menentukan tampilan elemen yang tidak diatur baik oleh user maupun author.
+
+## 3. Mengapa *responsive design* penting dalam membuat aplikasi web?
+Dalam konteks pengembangan web, *responsive design* adalah membuat antarmuka aplikasi yang mudah dibaca dan digunakan terlepas dari ukuran ataupun resolusi layar. Aplikasi yang didesain secara responsif akan memiliki tampilan yang, meskipun berbeda, tetap mudah dan nyaman digunakan pada setiap perangkat yang mungkin digunakan user, seperti desktop (dengan ukuran monitor yang beragam), laptop, smartphone, atau tablet. Hal ini karena aplikasi responsif dapat menyesuaikan dirinya dengan perangkat user. 
+
+Tanpa menggunakan responsive design, aplikasi yang dikembangkan khusus untuk platform tertentu akan sulit digunakan di perangkat lain. Sebagai contoh, halaman web yang didesain untuk layar desktop/laptop (yang berukuran besar dan berbentuk horizontal) akan sulit digunakan di layar ponsel yang berbentuk vertikal, dengan konten halaman tidak bisa ditampilkan di layar sekaligus (butuh scroll) dan ukuran teks terlalu kecil. Sebaliknya, halaman yang didesain untuk ponsel akan meninggalkan banyak ruang kosong ketika dibuka di komputer desktop. Hal ini menyebabkan *user experience* di perangkat selain target utama menjadi kurang nyaman.
+
+Untuk mencontohkan aplikasi yang menggunakan dan tidak menggunakan *responsive design*, saya akan menggunakan dua aplikasi milik Universitas Indonesia.
+
+Salah satu contoh aplikasi yang menggunakan desain responsif dengan baik adalah SCELE Fasilkom UI (https://scele.cs.ui.ac.id/). Di layar desktop, SCELE memiliki desain tiga kolom, dengan konten utama di kolom tengah dan navigasi di kolom kiri dan kanan. Akan tetapi, di layar mobile yang lebih sempit, desain ini "digencet" menjadi satu kolom, dan masing-masing fungsi tersebut menempati posisi vertikal yang berbeda. Ukuran font juga disesuaikan dengan layar ponsel yang kecil.
+
+Di sisi lain, contoh aplikasi yang tidak memanfaatkan desain responsif adalah SIAK-NG (https://academic.ui.ac.id). SIAK-NG memiliki tampilan yang sama baik di layar desktop maupun layar mobile. Antarmuka SIAK-NG cukup standar di desktop, tetapi saat diakses di ponsel, teks yang kecil dan *layout* yang horizontal menyebabkan isi halaman sulit untuk dibaca. Ketika saya mengakses SIAK-NG di ponsel, saya sering kali harus *zoom* tampilan halaman agar saya dapat membaca informasi yang saya butuhkan atau mengklik menu.
+
+## 4. Apa perbedaan antara margin, border, dan padding?
+Mengutip artikel dari W3Schools, elemen HTML dari sudut pandang CSS memiliki "kotak" di luarnya, yang disebut dengan *box model*. Kotak ini memiliki tiga bagian, yaitu ***padding***, ***border***, dan ***margin***.
+
+*Padding* adalah ruang di sekeliling elemen yang memisahkan antara isi elemen tersebut dengan pembatasnya (*border*). Padding dapat digunakan untuk memperluas ukuran suatu elemen agar mudah untuk dilihat, dibaca, atau diklik. Sebagai contoh, jika kita ingin memberikan garis batas (border) pada teks, garis batas itu akan muncul hampir menempel pada teks, sehingga membuat tulisan tersebut terkesan sempit dan sulit dibaca, terutama pada ujung baris. Solusi masalah ini adalah dengan menambahkan padding pada teks tersebut sehingga border menjauh.
+
+*Border* adalah garis yang membatasi suatu elemen dengan elemen lainnya pada halaman tersebut. Ada banyak aspek border yang dapat dikustomisasi untuk menyesuaikan dengan tampilan situs kita, misalnya warna, ketebalan, lengkungan, hingga gaya penggambaran seperti garis putus-putus atau efek 3D. Border berguna untuk memperjelas batas suatu elemen dan menonjolkan elemen dari latar belakangnya. Misalnya, jika kita menaruh *link* atau tombol di atas foto yang berwarna serupa, kita dapat memberikan border agar pengguna mudah melihat apa yang harus diklik.
+
+*Margin* adalah ruang yang memisahkan suatu elemen (termasuk padding dan border-nya) dengan elemen lain. Margin cocok untuk digunakan jika elemen kita terkesan terlalu dekat satu sama lain. Selain itu, margin ``auto`` juga dapat digunakan untuk memusatkan elemen (meskipun sekarang sudah disusul oleh flexbox dan teknik lainnya)
+
+## 5. Apa itu flexbox dan grid dan apa kegunaannya?
+Flexbox merupakan modul CSS yang digunakan untuk mengatur posisi dan ukuran elemen secara *one-dimensional* (disusun dalam garis vertikal atau horizontal). Flex merupakan tipe property ``display`` di CSS yang dapat diberikan kepada suatu elemen *container* untuk menampilkan semua elemen di dalamnya secara flex.
+
+Keunikan dari flex adalah elemen-elemen di dalamnya dapat membesar atau mengecil sesuai *axis*-nya untuk menyesuaikan dengan isi elemen dan ukuran layar. Dengan flex, kita memiliki kendali penuh terhadap posisi, ukuran, dan potensi perubahan elemen, baik di axis vertikal maupun horizontal sehingga kita dapat, misalnya, membuat satu elemen dua atau tiga kali lebih besar dari elemen lainnya dalam flex. Pengaturan ukuran ini proporsional, sehingga di layar yang lebih kecil seperti ponsel, elemen akan mengecil tetapi mempertahankan perbandingan yang sama.
+
+Grid juga merupakan modul CSS, tetapi digunakan untuk memosisikan elemen dalam bentuk tabel sehingga dapat bekerja dalam dua dimensi, mengatur baris sekaligus kolom. Mengatur grid kita lakukan dengan property ``grid-template-rows`` dan ``grid-template-columns``. Pengaturan ini dapat dilakukan secara manual dengan ukuran pixel, atau proporsional dengan ukuran halaman web untuk mewujudkan tabel yang responsif.
+
+Kegunaan utama flexbox ataupun grid adalah untuk membuat *responsive design* pada aplikasi web kita. Hal ini karena ciri khas kedua layout ini adalah mampu mengubah ukuran dan margin elemen sesuai dengan layar perangkat yang digunakan. Oleh karena itu, flexbox dan grid dapat menyesuaikan tampilan website kita untuk layar desktop, laptop, ponsel, atau perangkat lain.
+
+## Referensi Tugas 5
+"CSS cascading and inheritance: Specificity". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_cascade/Specificity
+
+"CSS layout: Responsive web design". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Responsive_Design
+
+"CSS Box Model". W3Schools. Diakses dari https://www.w3schools.com/css/css_boxmodel.asp
+
+"CSS: CSS flexible box layout". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout
+
+"CSS: CSS grid layout". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout

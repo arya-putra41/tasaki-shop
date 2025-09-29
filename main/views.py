@@ -15,12 +15,12 @@ from django.contrib.auth.decorators import login_required
 def show_main(request):
     filter_type = request.GET.get("filter", "all")
 
-    if filter_type == "all":
-        product_list = Product.objects.all()
-    elif filter_type == "my":
+    if filter_type == "my":
         product_list = Product.objects.filter(user=request.user)
     elif filter_type == "featured":
         product_list = Product.objects.filter(is_featured=True)
+    else:
+        product_list = Product.objects.all()
 
     context = {
         'npm' : '2406406300',
