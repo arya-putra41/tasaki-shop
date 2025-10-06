@@ -311,3 +311,41 @@ Kegunaan utama flexbox ataupun grid adalah untuk membuat *responsive design* pad
 "CSS: CSS flexible box layout". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout
 
 "CSS: CSS grid layout". Mozilla Developer Network. Diakses dari https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout
+
+# Tugas 6
+## 1. Apa perbedaan antara synchronous request dan asynchronous request?
+Synchronous request adalah bentuk HTTP *request* pada aplikasi web yang mengharuskan user menunggu laman web diperbarui atau diubah. Ketika user melakukan HTTP request (misalnya dengan mengklik *link*), request tersebut akan diolah dan HTTP response yang dihasilkan dikirim ke browser user. Di saat itu user tidak dapat melakukan kegiatan lain di halaman yang sedang dibacanya, karena halaman tersebut sedang di-unload dan diganti dengan halaman baru. Contoh synchronous request digunakan di situs seperti Wikipedia ketika mengklik link untuk menuju artikel lain, atau di aplikasi SCELE Fasilkom UI saat kita ingin berpindah ke kelas/mata kuliah lain.
+
+Asynchronous request, sebaliknya, merupakan HTTP *request* yang tetap membebaskan user untuk berinteraksi dengan halaman saat ini. Hal ini karena request asynchronous dapat berjalan "di belakang" selagi user beraktivitas di halaman web kita. Keuntungan menggunakan asynchronous request adalah aplikasi web kita terkesan lebih responsif dan mudah digunakan. Pada umumnya, asynchronous request dilayani dengan menggunakan AJAX (Asynchronous JavaScript and XML). Contoh aplikasi yang menggunakan asynchronous request adalah media sosial seperti Instagram, Twitter dan Youtube; ketiga platform ini menggunakan fitur *infinite scrolling*, sehingga user tidak perlu terus berpindah-pindah halaman untuk memuat konten yang mereka cari.
+
+## 2. Bagaimana alur kerja AJAX di Django?
+AJAX pada umumnya memiliki alur seperti berikut:
+- Terjadi suatu *event* di halaman web (misalnya pengguna mengklik tombol untuk menampilkan komentar)
+- Kode JavaScript pada halaman menciptakan objek ``XMLHttpRequest`` dan mengirimnya ke server. Kode tersebut juga mendeskripsikan apa yang akan terjadi saat hasil dari request tersebut diperoleh.
+- Server menerima dan mengolah request yang diberikan, lalu mengirimkan hasil request kembali ke browser.
+- Kode JavaScript kita membaca hasil request tersebut dan melakukan fungsi yang sesuai (misalnya, menampilkan komentar yang sudah dimuat)
+
+Pada masa kini, kita lebih sering menggunakan API ``fetch()`` di JavaScript daripada ``XMLHttpRequest``. API fetch berfungsi dengan memanfaatkan janji (Promise), yaitu memanggil suatu fungsi dan melakukan tindakan lain sambil menunggu hasil ``return`` dari fungsi tersebut. Bersama dengan fetch, kita juga menggunakan *keyword* ``await`` yang bertugas untuk "menunggu" datangnya hasil fetch. 
+
+## 3. Apa keuntungan menggunakan AJAX dibandingkan render biasa?
+Pemanfaatan AJAX pada aplikasi web (dan JavaScript pada umumnya) membantu kita membuat aplikasi web yang lebih dinamis dan interaktif. 
+
+Jika kita hanya menggunakan synchronous request, kita harus memuat halaman web baru setiap kali user melakukan HTTP request. Hal ini membuat aplikasi kita lambat, karena user harus banyak menunggu jawaban dari server untuk menampilkan halaman baru tersebut. Dengan memanfaatkan asynchronous request, kita dapat mengambil dan mengirim data ke server serta menampilkannya di laman web tanpa perlu menunggu server menanggapinya. Kita cukup meng-*handle* jawaban yang dapat timbul dari server, apakah berhasil atau *error*. Selain itu, menggunakan HTML dan CSS DOM dengan JavaScript artinya halaman web kita dapat berubah seiring dengan apa yang dilihat atau diklik oleh user. 
+
+## 4. Bagaimana cara memastikan keamanan saat AJAX menangani fitur login dan register?
+AJAX dapat bertentangan dengan prinsip keamanan pada form, karena AJAX membaca input di dalam fungsi JavaScript. Input yang tidak aman mungkin saja dibaca oleh browser sebagai kode JavaScript, sehingga terbuka celah bagi penyerang untuk menjalankan kode apa saja yang diinginkannya pada browser pengguna lain.
+
+Beberapa langkah yang dapat dilakukan untuk memastikan keamanan formulir dengan AJAX:
+- Menggunakan ``strip_tags`` dari ``django.utils.html`` pada *view* Django (Python). Fungsi ini berfungsi menghilangkan *tag* HTML yang terbaca di dalam input dari user, sehingga user tidak dapat mengubah formatting, mengubah layout, atau bahkan menyisipkan kode program melalui ``<script>``.
+- Menggunakan ``DOMPurify`` pada kode script formulir (JavaScript). Fungsi ini dapat membersihkan elemen dan atribut pada string HTML yang berpotensi berbahaya (memungkinkan *arbitrary code execution*).
+- Menggunakan *middleware* CSRF pada Django untuk menghindari *cross-site request forgery*. Menggunakan CSRF token Django dengan AJAX sedikit berbeda dibanding menggunakannya pada formulir biasa, karena kita perlu melewatkan CSRF token kita bersama isi formulir saat melakukan POST. Kita dapat memperoleh token yang digunakan dengan mengambilnya dari *cookie* (menggunakan ``Cookies.get``) atau mengambilnya dari HTML setelah kita menggunakan elemen Django ``{% csrf_token %}`` (mencari elemen HTML dengan nama ``csrfmiddlewaretoken``).
+
+## 5. Bagaimana AJAX mempengaruhi pengalaman pengguna (user experience)?
+Implementasi AJAX yang tepat akan membuat aplikasi web kita terkesan lebih responsif dan cepat. Maksud dari AJAX adalah mengubah *user experience* aplikasi web menjadi lebih mirip aplikasi desktop; sebagai contoh, aplikasi desktop untuk membaca email dapat berpindah-pindah dari inbox ke outbox ke spam dan halaman-halaman lain dengan cepat, tanpa perlu menunggu pesan-pesan kita memuat terlebih dahulu. Dengan AJAX, kita dapat memuat garis-garis besar suatu halaman terlebih dahulu seperti navigasi dan judul, dan konten halaman yang lain dapat dimuat di belakang layar sambil user menggunakan halaman kita. 
+
+## Referensi Tugas 6
+Tim Dosen PBP. (2025). Data Delivery (Markup Language & JSON) (Slide presentasi). Fakultas Ilmu Komputer Universitas Indonesia.
+
+"JS AJAX Intro". W3Schools. Diakses dari https://www.w3schools.com/js/js_ajax_intro.asp
+
+Django Software Foundation. (2025). Dokumentasi Django versi 5.2. Diakses dari https://docs.djangoproject.com
