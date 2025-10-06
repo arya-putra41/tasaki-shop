@@ -6,73 +6,205 @@
 {% endblock meta %}
 
 {% block content %}
-<div class="bg-gradient-to-br from-blue-50 via-indigo-100 to-blue-200 w-full min-h-screen">
+{% include 'navbar.html' %}
+<div class="bg-gradient-to-br from-blue-50 via-indigo-100 to-blue-200 w-full pt-16 min-h-screen">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         <!-- Back Navigation -->
         <div class="mb-6">
-            <a href="{% url 'main:show_main' %}" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            <a href="{% url 'main:show_main' %}"
+                class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 ← Back to Main Page
             </a>
         </div>
-        
-        <!-- Article -->
-        <article class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            
+
+        <!-- Loading State -->
+        <div id="loading-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <svg class="animate-spin h-8 w-8 text-blue-600 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+            <p class="text-gray-600 mt-3">Loading news detail...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="bg-white rounded-lg border border-gray-200 p-12 text-center hidden">
+            <div class="w-16 h-16 mx-auto mb-4">
+                <div class="text-red-500 text-5xl">⚠️</div>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Failed to load news</h3>
+            <p class="text-gray-500">Please try again later.</p>
+        </div>
+
+        <!-- Article Content -->
+        <article id="article-content" class="bg-white rounded-lg border border-gray-200 overflow-hidden hidden">
+
             <!-- Header -->
             <div class="p-6 sm:p-8">
-                <div class="flex flex-wrap items-center gap-2 mb-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 border border-gray-900 font-medium text-gray-900">
-                        In: {{ product.category }}
-                    </span>
-                    {% if product.is_featured %}
-                        <span class="inline-flex items-center px-2.5 py-1 font-bold bg-blue-700 text-white">
-                            <span class="animate-pulse mr-2">●</span> Featured!
-                        </span>
-                    {% endif %}
+                <div id="badges-container" class="flex flex-wrap items-center gap-2 mb-4">
+                    <!-- Dynamic badges will be inserted here -->
                 </div>
-                
-                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
-                    {{ product.name }}
+
+                <h1 id="article-title" class="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+                    <!-- Title will be inserted here -->
                 </h1>
             </div>
 
             <!-- Featured Image -->
-            {% if product.thumbnail %}
-                <div class="flex justify-center px-6 sm:px-8">
-                    <img src="{{ product.thumbnail }}" 
-                         alt="{{ product.name }}" 
-                         class="aspect-[16/9] sm:h-80 lg:h-96 object-cover rounded-lg">
-                </div>
-            {% endif %}
+            <div id="featured-image-container" class="px-6 sm:px-8 hidden">
+                <img id="featured-image" src="" alt="" class="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-lg">
+            </div>
 
             <div class="border-t border-gray-200 p-6 sm:p-8">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-base sm:text-lg italic text-blue-900">
-                            {% if product.user %}
-                                <p>Sold by <span class="font-semibold underline">{{ product.user.username }}</span> |
-                                   <span class="font-semibold">{{ product.stock }} available</span></p>
-                            {% else %}
-                                <p>Sold by Anonymous | <span class="font-semibold">{{ product.stock }} available</span></p>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div>
-                        <h4 class="text-lg md:text-2xl font-bold text-blue-900">${{ product.price }}</h4>
+            <div class="flex items-center justify-between">
+                <div>
+                    <div id="product-seller-stock" class="text-semibold sm:text-lg italic text-blue-900">
+                            <!-- Seller name & stock will be inserted here -->
                     </div>
                 </div>
+
+                <div>
+                    <h4 id="product-price" class="text-lg md:text-2xl font-bold text-blue-900">
+                            <!-- Price will be inserted here -->
+                    </h4>
+                </div>
+            </div>
+            </div>
 
             <!-- Content -->
             <div class="p-6 sm:p-8">
                 <div class="prose prose-lg max-w-none">
-                    <div class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
-                        {{ product.description }}
+                    <div id="article-content-text"
+                        class="text-gray-700 leading-relaxed whitespace-pre-line text-base sm:text-lg">
+                        <!-- Content will be inserted here -->
                     </div>
                 </div>
             </div>
         </article>
     </div>
 </div>
+
+
+<script>
+    // Configuration
+    const PRODUCT_ID = "{{ product.id }}";
+    const DETAIL_ENDPOINT = `{% url 'main:show_json_by_id' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', PRODUCT_ID);
+
+    // DOM Elements
+    const loadingState = document.getElementById('loading-state');
+    const errorState = document.getElementById('error-state');
+    const articleContent = document.getElementById('article-content');
+    const badgesContainer = document.getElementById('badges-container');
+    const articleTitle = document.getElementById('article-title');
+    const featuredImageContainer = document.getElementById('featured-image-container');
+    const featuredImage = document.getElementById('featured-image');
+    const articleContentText = document.getElementById('article-content-text');
+    const productSellerStock = document.getElementById('product-seller-stock');
+    const productPrice = document.getElementById('product-price')
+
+    // Show/hide page sections
+    function showState(state) {
+        loadingState.classList.toggle('hidden', state !== 'loading');
+        errorState.classList.toggle('hidden', state !== 'error');
+        articleContent.classList.toggle('hidden', state !== 'ready');
+    }
+
+    // Get readable category name
+    function getReadableCategoryName(categoryCode) {
+        const categoryMapping = {
+            shoes: 'Shoes',
+            jersey: 'Jersey',
+            pants: 'Pants',
+            pad: 'Pad',
+            headwear: 'Headwear',
+            gloves: 'Gloves',
+            ball: 'Ball',
+            bag: 'Bag',
+            bottle: 'Bottle',
+            other: 'Other',
+        };
+        return categoryMapping[categoryCode] || categoryCode;
+    }
+
+    // Render article content
+    function renderArticle(product) {
+        // Set title
+        articleTitle.textContent = product.name;
+        document.title = `${product.name} - Tasaki Shop`;
+
+        // Set badges
+        badgesContainer.innerHTML = '';
+
+        // Category badge
+        const categoryBadge = document.createElement('span');
+        categoryBadge.className = 'inline-flex items-center px-2.5 py-0.5 border border-gray-900 font-medium text-gray-900';
+        categoryBadge.textContent = 'In: ' + getReadableCategoryName(product.category);
+        badgesContainer.appendChild(categoryBadge);
+
+        // Featured badge
+        if (product.is_featured) {
+            const featuredBadge = document.createElement('span');
+            const featuredAnimate = document.createElement('span');
+            featuredBadge.className = 'inline-flex items-center px-2.5 py-1 font-bold bg-blue-700 text-white';
+
+            featuredAnimate.className = 'animate-pulse ml-2';
+            featuredAnimate.textContent = '●';
+            badgesContainer.appendChild(featuredBadge);
+
+            featuredBadge.textContent = 'Featured!';
+            featuredBadge.appendChild(featuredAnimate);
+        }
+
+        // Set featured image
+        if (product.thumbnail) {
+            featuredImage.src = product.thumbnail;
+            featuredImage.alt = product.name;
+            featuredImageContainer.classList.remove('hidden');
+        } else {
+            featuredImageContainer.classList.add('hidden');
+        }
+
+        // Set stock and price
+        if (product.user) {
+            const sellerStockDisplay = document.createElement('p');
+            sellerStockDisplay.textContent = "Sold by " + product.username + " | " + product.stock + " available";
+            productSellerStock.appendChild(sellerStockDisplay);
+        } else {
+            const sellerStockDisplay = document.createElement('p');
+            sellerStockDisplay.textContent = "Sold by Anonymous | " + product.stock + " available";
+            productSellerStock.appendChild(sellerStockDisplay);
+        }
+
+        productPrice.textContent = "$" + product.price;
+
+        // Set content
+        articleContentText.textContent = product.description;
+    }
+
+    // Fetch news detail
+    async function loadProductDetail() {
+        try {
+            showState('loading');
+
+            const response = await fetch(DETAIL_ENDPOINT, {
+                headers: { 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch news detail');
+            }
+
+            const productData = await response.json();
+            renderArticle(productData);
+            showState('ready');
+        } catch (error) {
+            console.error('Error loading detail:', error);
+            showState('error');
+        }
+    }
+
+    // Initialize page
+    loadProductDetail();
+</script>
 {% endblock content %}
